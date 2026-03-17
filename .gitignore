@@ -1,0 +1,37 @@
+# Python / Django (BE)
+BE/__pycache__/
+BE/**/__pycache__/
+BE/*.py[cod]
+BE/*$py.class
+
+BE/venv/
+BE/.env
+BE/db.sqlite3
+
+# Django static/media (BE)
+BE/staticfiles/
+BE/media/
+
+
+# Node / React (FE)
+FE/node_modules/
+FE/dist/
+FE/dist-ssr/
+FE/*.local
+
+
+# Common
+.DS_Store
+Thumbs.db
+*.log
+logs/
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
