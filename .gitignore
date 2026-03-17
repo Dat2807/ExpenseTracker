@@ -1,12 +1,19 @@
 # Python / Django (BE)
-BE/__pycache__/
-BE/**/__pycache__/
-BE/*.py[cod]
-BE/*$py.class
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
 
 BE/venv/
+BE/.venv/
 BE/.env
+BE/.env.*
 BE/db.sqlite3
+BE/*.sqlite3
+BE/*.sqlite3-journal
 
 # Django static/media (BE)
 BE/staticfiles/
@@ -18,13 +25,25 @@ FE/node_modules/
 FE/dist/
 FE/dist-ssr/
 FE/*.local
+FE/.env
+FE/.env.*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
 
 # Common
 .DS_Store
 Thumbs.db
+Desktop.ini
 *.log
 logs/
+coverage/
+.coverage
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tox/
 
 # Editor / IDE
 .vscode/
