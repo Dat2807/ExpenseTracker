@@ -46,6 +46,16 @@
   cursor: pointer;
 }
 
+.button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 13px;
+}
+
 .footer {
   margin-top: 12px;
   font-size: 14px;
