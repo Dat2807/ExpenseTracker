@@ -36,3 +36,52 @@
   background: #f9fafb;
 }
 
+.userMenu {
+  position: relative;
+}
+
+.avatarButton {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  background: #fff;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.dropdown {
+  position: absolute;
+  right: 0;
+  top: 42px;
+  width: 180px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 100;
+}
+
+.menuItem,
+.menuItemDanger {
+  text-align: left;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+}
+
+.menuItem:hover,
+.menuItemDanger:hover {
+  background: #f3f4f6;
+}
+
+.menuItemDanger {
+  color: #b91c1c;
+}
+
