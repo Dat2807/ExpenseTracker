@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { login } from '../../api/account'
+import { getApiErrorMessage } from '../../api/client'
 import { saveToken } from '../../state/auth'
 import styles from './LoginPage.module.css'
 
@@ -22,7 +23,7 @@ export function LoginPage() {
       saveToken(res.token)
       navigate('/dashboard')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Login failed')
+      setError(getApiErrorMessage(err, 'Login failed'))
     } finally {
       setLoading(false)
     }

@@ -27,6 +27,8 @@ FE/dist-ssr/
 FE/*.local
 FE/.env
 FE/.env.*
+Frontend/.env
+Frontend/.env.*
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*

@@ -3,7 +3,7 @@ import type { FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { register } from '../../api/account'
-import { saveToken } from '../../state/auth'
+import { getApiErrorMessage } from '../../api/client'
 import styles from './RegisterPage.module.css'
 
 export function RegisterPage() {
@@ -20,16 +20,15 @@ export function RegisterPage() {
     setError('')
     setLoading(true)
     try {
-      const res = await register({
+      await register({
         username,
         email,
         password,
         password_confirm: passwordConfirm,
       })
-      saveToken(res.token)
-      navigate('/dashboard')
+      navigate('/login')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Register failed')
+      setError(getApiErrorMessage(err, 'Register failed'))
     } finally {
       setLoading(false)
     }
