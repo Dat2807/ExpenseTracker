@@ -4,9 +4,8 @@ import styles from './Sidebar.module.css'
 
 const navItems = [
   { to: '/dashboard', label: 'Dashboard' },
+  { to: '/reports', label: 'Reports' },
   { to: '/categories', label: 'Categories' },
-  { to: '/budgets', label: 'Budgets' },
-  { to: '/transactions', label: 'Transactions' },
   { to: '/quick-notes', label: 'Quick Notes' },
 ]
 

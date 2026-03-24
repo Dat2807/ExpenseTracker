@@ -1,6 +1,6 @@
 ---
 name: Plan dự án quản lý tài chính (bản chi tiết hơn)
-overview: "Plan cập nhật cho ứng dụng quản lý tài chính: thêm Category dùng chung theo tháng, budget theo từng Category/tháng, ghi chú nhanh cho description, i18n Anh/Việt với en.json/vi.json, và MVP nhập giao dịch bằng nút + (không Excel)."
+overview: "Plan cập nhật theo flow mới: Report theo tháng là trung tâm, vào từng Report để quản lý Budget/Transactions, giữ Category + QuickNotes ở mức global theo user, i18n EN/VI làm ở phase sau."
 todos: []
 isProject: false
 ---
@@ -13,16 +13,18 @@ isProject: false
 - **Category tổng**:
   - Có 2 nhóm: **Category thu** và **Category chi**.  
   - **Mỗi user tự định nghĩa bộ Category riêng** (per user), không dùng chung.
-- **Budget theo Category/tháng**:
-  - Mỗi tháng, cho **mỗi Category chi**, user có thể nhập `planned_amount` (dự định chi).  
-  - Thực chi = tổng `amount` của Transaction thuộc Category đó trong tháng đó.  
-  - Thống kê tháng: với mỗi Category chi: `planned` vs `actual`; có thể có tổng toàn tháng (sum tất cả Category chi).
+- **Monthly Report là trung tâm**:
+  - Mỗi report tương ứng đúng **1 tháng** (`year`, `month`) của user.  
+  - User vào danh sách report -> chọn report tháng cụ thể -> thao tác budget/transactions trong report đó.
+- **Budget theo Category trong report tháng**:
+  - Trong mỗi report tháng, cho **mỗi Category chi**, user nhập `planned_amount`.  
+  - Budget không đứng màn top-level riêng; là nghiệp vụ bên trong report.
 - **Transaction**:
   - Field chính: date, description (note chính), amount, category, created_at.  
   - **Không còn field type** trên Transaction; thu/chi được suy ra từ `category.type`.  
   - Category bắt buộc, và Category đã biết trước (chọn từ list).
-- **Nhập giao dịch (MVP)**:
-  - Nhập **bằng nút +** (form tay) là chính.  
+- **Transaction trong report tháng (MVP)**:
+  - Nhập **bằng nút +** (form tay) bên trong report tháng.  
   - Chưa bắt buộc có import Excel ở MVP; có thể để phase sau.
 - **Ghi chú nhanh (Notes)**:
   - Có một nơi riêng để tạo/lưu các note mẫu (QuickNotes) per user (giống Category nhưng là text).  
@@ -48,11 +50,14 @@ isProject: false
 - **Category**:
   - Fields: user (FK), name, type (`INCOME`/`EXPENSE`), is_active.  
   - Unique: (user, name, type).
+- **MonthlyReport**:
+  - Fields: user (FK), year (int), month (int), title (optional), note (optional), timestamps.  
+  - Unique: (user, year, month).
 - **MonthlyCategoryBudget**:
-  - Fields: user (FK), category (FK Category, chỉ cho type EXPENSE), year (int), month (int), planned_amount (Decimal).  
-  - Unique: (user, category, year, month).
+  - Fields: user (FK), report (FK MonthlyReport), category (FK Category, chỉ cho type EXPENSE), planned_amount (Decimal).  
+  - Unique: (user, report, category).
 - **Transaction**:
-  - Fields: user (FK), category (FK Category), amount (Decimal), date, description, created_at.  
+  - Fields: user (FK), report (FK MonthlyReport), category (FK Category), amount (Decimal), date, description, created_at.  
   - Thu/chi suy ra từ `category.type` (không cần field type riêng).
 - **QuickNote** (ghi chú nhanh):
   - Fields: user (FK), title (optional), content (text), is_favorite, created_at.  
@@ -65,18 +70,19 @@ isProject: false
 - **Category API**:
   - List/Create/Update/Delete.  
   - Filter theo type (income/expense).
+- **MonthlyReport API**:
+  - List/Create/Update/Delete report tháng của user.  
+  - Endpoint chính cho flow vào tháng: ví dụ `/api/reports/`, `/api/reports/:id`.
 - **Budget API (MonthlyCategoryBudget)**:
-  - Endpoint để set/lấy budget theo năm-tháng: ví dụ `/api/budgets/?year=2026&month=3`.  
-  - Trả về danh sách Category EXPENSE + budget tương ứng (0 nếu chưa set).  
+  - Endpoint để set/lấy budget theo report: ví dụ `/api/budgets/?report=12`.  
+  - Trả về danh sách Category EXPENSE + budget tương ứng (0 nếu chưa set trong report đó).  
   - Hỗ trợ update nhiều dòng hoặc từng dòng.
 - **Transaction API**:
-  - List + filter theo `year`, `month`, `category`, và loại thu/chi (filter gián tiếp qua Category.type).  
+  - List + filter theo `report`, `category`, và loại thu/chi (filter gián tiếp qua Category.type).  
   - Create/Update/Delete.
-- **Stats API**:
-  - Ví dụ `/api/stats/monthly/?year=2026&month=3`.  
-  - Trả về:  
-    - Theo từng Category EXPENSE: `planned`, `actual`, `diff`.  
-    - Tổng toàn tháng: tổng thu, tổng chi, tổng planned, tổng actual, chênh lệch.
+- **Stats API** (phase sau):
+  - Làm sau khi flow report + budget + transactions ổn định.  
+  - Có thể dùng endpoint dạng `/api/reports/:id/stats`.
 - **QuickNote API**:
   - List/Create/Update/Delete notes của user hiện tại.
 
@@ -101,40 +107,34 @@ Tất cả API filter theo `request.user` (chỉ thấy data của mình).
 ### 3.2 Layout & Routing
 
 - Dùng React Router:  
+  - `/` (landing/giới thiệu)  
   - `/login`, `/register`  
-  - `/dashboard`  
-  - `/transactions`  
-  - `/budgets` (dự kiến chi)  
-  - `/stats`  
-  - `/quick-notes` (hoặc gộp vào một tab của settings).
+  - `/dashboard` (placeholder tổng quan, sẽ refine sau)  
+  - `/reports` (danh sách tháng)  
+  - `/reports/:id` (chi tiết tháng: overview+budget, transactions, detailed report)  
+  - `/categories`  
+  - `/quick-notes`
 - Layout chung: header (ngôn ngữ switch EN/VI, user menu), sidebar (menu các màn).
 
 ### 3.3 Màn chính
 
 - **Auth pages**: Form login/register đơn giản, gọi API BE, lưu token/session.  
+- **Landing page** (`/`):
+  - Trang giới thiệu ngắn; chưa login hiện nút đăng nhập/đăng ký.
+- **Dashboard** (`/dashboard`):
+  - Placeholder cho thông tin "tình hình gần đây" (làm chi tiết sau).
+- **Reports list** (`/reports`):
+  - Danh sách report tháng của user; có nút tạo report tháng mới.
+- **Report detail** (`/reports/:id`):
+  - Tab 1: Overview + khu nhập/chỉnh budget của tháng đó.
+  - Tab 2: Transactions của tháng đó (+ form nhập tay, có quick note popup cho description).
+  - Tab 3: Detailed report + charts (làm sau).
 - **Category management**:
   - Màn danh sách Category: filter theo type (thu/chi), thêm/sửa/xóa.
-- **Budget per Category per Month** (`/budgets`):
-  - Chọn `year`, `month`.  
-  - Bảng: mỗi dòng là một Category EXPENSE, có input `planned_amount`.  
-  - Nút Save để gửi cả bảng lên BE.
-- **Transactions** (`/transactions`):
-  - Filter theo `year`, `month`, loại (thu/chi) và category (dựa trên Category.type).  
-  - UI tách rõ 2 khối/cột: một khối cho **Thu** (chỉ Category thu), một khối cho **Chi** (chỉ Category chi).  
-  - Bảng list giao dịch.  
-  - Nút `+` ở mỗi khối mở form:
-    - Chọn category (list theo khối Thu/Chi), date, amount, description (note chính).  
-    - Ở phần description có **icon nhỏ** (ví dụ `📝` hoặc chữ `N`) -> mở popup Quick notes để chọn note mẫu, dán vào description.
 - **Quick Notes** (`/quick-notes` hoặc modal từ menu):
   - List các note (title + content).  
   - Thêm/sửa/xóa.  
   - Popup chọn note: khi click một note, FE chèn `content` vào description (thay hoặc thêm).
-- **Stats** (`/stats`):
-  - Chọn `year`, `month`.  
-  - Hiển thị:  
-    - Bảng Category: `planned`, `actual`, `diff`.  
-    - Tổng thu, tổng chi, tổng planned, tổng actual, diff.
-  - Có thể thêm 1 biểu đồ đơn giản sau.
 
 ---
 
@@ -148,13 +148,13 @@ Tất cả API filter theo `request.user` (chỉ thấy data của mình).
 ## 5. Thứ tự làm (MVP)
 
 1. **BE**: .env + PostgreSQL + DRF + CORS.
-2. **BE**: Model + API cho Category, Transaction, MonthlyCategoryBudget, QuickNote, Stats.
+2. **BE**: Model + API cho Category, MonthlyReport, MonthlyCategoryBudget, Transaction, QuickNote.
 3. **BE**: Auth API.
-4. **FE**: Thiết lập i18n (en.json/vi.json), layout + router, auth flow.
-5. **FE**: Category screen + Budget screen.
-6. **FE**: Transactions screen với popup Quick note trong description.
-7. **FE**: Stats screen.
-8. **Refine UI/UX, error handling, i18n chi tiết hơn.
+4. **FE**: Layout + router + auth flow + landing page.
+5. **FE**: Reports list + report detail (overview/budget + transactions tabs).
+6. **FE**: Category screen + Quick Notes screen.
+7. **FE**: Refine UI/UX + error handling chi tiết.
+8. **FE/BE**: i18n chi tiết + stats/chart phase sau.
 
 Sau khi xong MVP này, có thể bàn tiếp về import Excel, export CSV, đa tiền tệ, v.v.
 

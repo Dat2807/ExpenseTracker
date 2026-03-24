@@ -4,12 +4,12 @@ import { MainLayout } from '../components/layout/MainLayout/MainLayout'
 import { getToken } from '../state/auth'
 import { LoginPage } from '../pages/auth/LoginPage'
 import { RegisterPage } from '../pages/auth/RegisterPage.tsx'
-import { BudgetsPage } from '../pages/budgets/BudgetsPage'
 import { CategoriesPage } from '../pages/categories/CategoriesPage'
 import { DashboardPage } from '../pages/dashboard/DashboardPage'
 import { HomePage } from '../pages/home/HomePage'
 import { QuickNotesPage } from '../pages/quick-notes/QuickNotesPage'
-import { TransactionsPage } from '../pages/transactions/TransactionsPage'
+import { ReportDetailPage } from '../pages/reports/ReportDetailPage'
+import { ReportsPage } from '../pages/reports/ReportsPage'
 
 function Protected() {
   if (!getToken()) {
@@ -38,9 +38,9 @@ export function AppRoutes() {
       <Route element={<Protected />}>
         <Route element={<MainLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/reports/:reportId" element={<ReportDetailPage />} />
           <Route path="/categories" element={<CategoriesPage />} />
-          <Route path="/budgets" element={<BudgetsPage />} />
-          <Route path="/transactions" element={<TransactionsPage />} />
           <Route path="/quick-notes" element={<QuickNotesPage />} />
         </Route>
       </Route>
