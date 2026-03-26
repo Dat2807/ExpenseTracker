@@ -8,7 +8,7 @@ import { CategoriesPage } from '../pages/categories/CategoriesPage'
 import { DashboardPage } from '../pages/dashboard/DashboardPage'
 import { HomePage } from '../pages/home/HomePage'
 import { QuickNotesPage } from '../pages/quick-notes/QuickNotesPage'
-import { ReportDetailPage } from '../pages/reports/ReportDetailPage'
+import { ReportDetailPage } from '../pages/reports/detail/ReportDetailPage'
 import { ReportsPage } from '../pages/reports/ReportsPage'
 
 function Protected() {

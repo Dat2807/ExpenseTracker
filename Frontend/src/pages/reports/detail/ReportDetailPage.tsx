@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
-import { getApiErrorMessage } from '../../api/client'
-import { getReport } from '../../api/reports'
+import { getApiErrorMessage } from '../../../api/client'
+import { getReport } from '../../../api/reports'
+import { DetailedReportTab } from './detailed/DetailedReportTab'
+import { OverviewBudgetTab } from './overview/OverviewBudgetTab'
+import { TransactionsTab } from './transactions/TransactionsTab'
 import styles from './ReportDetailPage.module.css'
 
 type TabKey = 'overview' | 'transactions' | 'detailed'
@@ -64,26 +67,9 @@ export function ReportDetailPage() {
       </div>
 
       <div className={styles.panel}>
-        {activeTab === 'overview' ? (
-          <>
-            <h3>Overview + Budget</h3>
-            <p>Cho nay se dat form budget theo category cho thang nay (MVP tiep theo).</p>
-          </>
-        ) : null}
-
-        {activeTab === 'transactions' ? (
-          <>
-            <h3>Transactions</h3>
-            <p>Cho nay se dat list + form giao dich cho report thang nay (MVP tiep theo).</p>
-          </>
-        ) : null}
-
-        {activeTab === 'detailed' ? (
-          <>
-            <h3>Detailed report</h3>
-            <p>Cho nay la bao cao chi tiet + bieu do (lam sau).</p>
-          </>
-        ) : null}
+        {activeTab === 'overview' ? <OverviewBudgetTab reportId={reportId} onError={setError} /> : null}
+        {activeTab === 'transactions' ? <TransactionsTab /> : null}
+        {activeTab === 'detailed' ? <DetailedReportTab /> : null}
       </div>
     </div>
   )

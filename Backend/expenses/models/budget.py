@@ -1,4 +1,3 @@
-from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator
 from django.db import models
 
@@ -31,11 +30,6 @@ class MonthlyCategoryBudget(models.Model):
         indexes = [
             models.Index(fields=["user", "report"]),
         ]
-
-    def clean(self):
-        super().clean()
-        if self.category_id and self.category.type != Category.Type.EXPENSE:
-            raise ValidationError({"category": "Budget only applies to EXPENSE categories."})
 
     def __str__(self) -> str:
         return f"{self.user_id} {self.category_id} report={self.report_id}: {self.planned_amount}"
