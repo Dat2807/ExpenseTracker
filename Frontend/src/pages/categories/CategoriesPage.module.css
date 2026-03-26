@@ -2,3 +2,84 @@
   text-align: left;
 }
 
+.title {
+  margin: 0;
+}
+
+.sub {
+  margin: 6px 0 0;
+  color: #6b7280;
+}
+
+.controls {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.select,
+.input {
+  height: 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 0 10px;
+}
+
+.select {
+  width: 130px;
+}
+
+.input {
+  width: 240px;
+}
+
+.button {
+  height: 34px;
+  border: 1px solid #111827;
+  background: #111827;
+  color: #fff;
+  border-radius: 8px;
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.error {
+  margin-top: 10px;
+  color: #b91c1c;
+}
+
+.list {
+  margin-top: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.item {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fff;
+}
+
+.itemName {
+  font-weight: 600;
+}
+
+.itemMeta {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.deleteButton {
+  border: 1px solid #ef4444;
+  color: #ef4444;
+  background: #fff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
