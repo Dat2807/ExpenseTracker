@@ -3,15 +3,14 @@ import { useEffect, useState } from 'react'
 import { listCategories } from '../../../../api/categories'
 import { createBudget, listBudgetsByReport, updateBudget } from '../../../../api/budgets'
 import { getApiErrorMessage } from '../../../../api/client'
+import { listTransactionsByReport } from '../../../../api/transactions'
+import { BudgetColumn } from './BudgetColumn'
+import type { BudgetColumnRow } from './BudgetColumn'
+import { BudgetProgress } from './BudgetProgress'
+import { OverviewCards } from './OverviewCards'
 import styles from './OverviewBudgetTab.module.css'
 
-type CategoryRow = {
-  categoryId: number
-  categoryName: string
-  budgetId?: number
-  plannedAmount: string
-  originalPlannedAmount: string
-}
+type CategoryRow = BudgetColumnRow & { budgetId?: number }
 
 export function OverviewBudgetTab(props: { reportId: string; onError: (message: string) => void }) {
   const { reportId, onError } = props
@@ -28,13 +27,18 @@ export function OverviewBudgetTab(props: { reportId: string; onError: (message: 
       setLoading(true)
       onError('')
       try {
-        const [expenseCategories, incomeCategories, budgets] = await Promise.all([
+        const [expenseCategories, incomeCategories, budgets, transactions] = await Promise.all([
           listCategories('EXPENSE'),
           listCategories('INCOME'),
           listBudgetsByReport(reportId),
+          listTransactionsByReport(reportId),
         ])
 
         const budgetMap = new Map(budgets.map((budget) => [budget.category, budget]))
+        const actualMap = new Map<number, number>()
+        for (const tx of transactions) {
+          actualMap.set(tx.category, (actualMap.get(tx.category) ?? 0) + Number(tx.amount || 0))
+        }
         const expRows = expenseCategories.map((category) => {
           const existed = budgetMap.get(category.id)
           const planned = existed?.planned_amount ?? ''
@@ -44,6 +48,7 @@ export function OverviewBudgetTab(props: { reportId: string; onError: (message: 
             budgetId: existed?.id,
             plannedAmount: planned,
             originalPlannedAmount: planned,
+            actualAmount: actualMap.get(category.id) ?? 0,
           }
         })
 
@@ -56,6 +61,7 @@ export function OverviewBudgetTab(props: { reportId: string; onError: (message: 
             budgetId: existed?.id,
             plannedAmount: planned,
             originalPlannedAmount: planned,
+            actualAmount: actualMap.get(category.id) ?? 0,
           }
         })
 
@@ -117,133 +123,62 @@ export function OverviewBudgetTab(props: { reportId: string; onError: (message: 
     }
   }
 
+  const plannedExpense = expenseRows.reduce((sum, row) => sum + Number(row.plannedAmount || 0), 0)
+  const plannedIncome = incomeRows.reduce((sum, row) => sum + Number(row.plannedAmount || 0), 0)
+  const actualExpense = expenseRows.reduce((sum, row) => sum + row.actualAmount, 0)
+  const actualIncome = incomeRows.reduce((sum, row) => sum + row.actualAmount, 0)
+  const plannedBalance = plannedIncome - plannedExpense
+  const actualBalance = actualIncome - actualExpense
+
   return (
     <div className={styles.grid}>
-      <div className={styles.overviewBox}>
-        <h3 className={styles.boxTitle}>Overview (coming)</h3>
-        <p className={styles.sub}>O nay de hien tong quan tinh hinh (lam sau).</p>
+      <div className={styles.top}>
+        <OverviewCards plannedBalance={plannedBalance} actualBalance={actualBalance} />
       </div>
 
-      <div className={styles.box}>
-        <div className={styles.boxHeader}>
-          <h3 className={styles.boxTitle}>Chi phi</h3>
-          {!editingExpense ? (
-            <button className={styles.editButton} type="button" onClick={() => setEditingExpense(true)}>
-              Edit
-            </button>
-          ) : (
-            <div className={styles.headerActions}>
-              <button
-                className={styles.saveButton}
-                type="button"
-                onClick={async () => {
-                  setSavingExpense(true)
-                  await saveColumn('EXPENSE')
-                  setSavingExpense(false)
-                }}
-                disabled={savingExpense}
-              >
-                {savingExpense ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                className={styles.cancelButton}
-                type="button"
-                onClick={() => {
-                  setExpenseRows((prev) => prev.map((r) => ({ ...r, plannedAmount: r.originalPlannedAmount })))
-                  setEditingExpense(false)
-                }}
-                disabled={savingExpense}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
-
-        {loading ? <p className={styles.sub}>Dang tai...</p> : null}
-
-        <div className={styles.table}>
-          <div className={styles.tableHeader}>
-            <div>Danh muc</div>
-            <div className={styles.rightCol}>Du kien</div>
-          </div>
-          {expenseRows.map((row) => (
-            <div key={row.categoryId} className={styles.tableRow}>
-              <div className={styles.name}>{row.categoryName}</div>
-              <input
-                className={styles.input}
-                type="number"
-                step="0.01"
-                min="0"
-                disabled={!editingExpense}
-                value={row.plannedAmount}
-                onChange={(e) => onChangeExpense(row.categoryId, e.target.value)}
-                placeholder="0"
-              />
-            </div>
-          ))}
-        </div>
+      <div className={styles.progressRow}>
+        <BudgetProgress title="Tien do chi phi" planned={plannedExpense} actual={actualExpense} />
+        <BudgetProgress title="Tien do thu nhap" planned={plannedIncome} actual={actualIncome} />
       </div>
 
-      <div className={styles.box}>
-        <div className={styles.boxHeader}>
-          <h3 className={styles.boxTitle}>Thu nhap</h3>
-          {!editingIncome ? (
-            <button className={styles.editButton} type="button" onClick={() => setEditingIncome(true)}>
-              Edit
-            </button>
-          ) : (
-            <div className={styles.headerActions}>
-              <button
-                className={styles.saveButton}
-                type="button"
-                onClick={async () => {
-                  setSavingIncome(true)
-                  await saveColumn('INCOME')
-                  setSavingIncome(false)
-                }}
-                disabled={savingIncome}
-              >
-                {savingIncome ? 'Saving...' : 'Save'}
-              </button>
-              <button
-                className={styles.cancelButton}
-                type="button"
-                onClick={() => {
-                  setIncomeRows((prev) => prev.map((r) => ({ ...r, plannedAmount: r.originalPlannedAmount })))
-                  setEditingIncome(false)
-                }}
-                disabled={savingIncome}
-              >
-                Cancel
-              </button>
-            </div>
-          )}
-        </div>
+      <div className={styles.columnsRow}>
+        <BudgetColumn
+          title="Chi phi"
+          rows={expenseRows}
+          loading={loading}
+          editing={editingExpense}
+          saving={savingExpense}
+          onStartEdit={() => setEditingExpense(true)}
+          onSave={async () => {
+            setSavingExpense(true)
+            await saveColumn('EXPENSE')
+            setSavingExpense(false)
+          }}
+          onCancel={() => {
+            setExpenseRows((prev) => prev.map((r) => ({ ...r, plannedAmount: r.originalPlannedAmount })))
+            setEditingExpense(false)
+          }}
+          onChange={onChangeExpense}
+        />
 
-        {loading ? <p className={styles.sub}>Dang tai...</p> : null}
-
-        <div className={styles.table}>
-          <div className={styles.tableHeader}>
-            <div>Danh muc</div>
-            <div className={styles.rightCol}>Du kien</div>
-          </div>
-          {incomeRows.map((row) => (
-            <div key={row.categoryId} className={styles.tableRow}>
-              <div className={styles.name}>{row.categoryName}</div>
-              <input
-                className={styles.input}
-                type="number"
-                step="0.01"
-                min="0"
-                disabled={!editingIncome}
-                value={row.plannedAmount}
-                onChange={(e) => onChangeIncome(row.categoryId, e.target.value)}
-                placeholder="0"
-              />
-            </div>
-          ))}
-        </div>
+        <BudgetColumn
+          title="Thu nhap"
+          rows={incomeRows}
+          loading={loading}
+          editing={editingIncome}
+          saving={savingIncome}
+          onStartEdit={() => setEditingIncome(true)}
+          onSave={async () => {
+            setSavingIncome(true)
+            await saveColumn('INCOME')
+            setSavingIncome(false)
+          }}
+          onCancel={() => {
+            setIncomeRows((prev) => prev.map((r) => ({ ...r, plannedAmount: r.originalPlannedAmount })))
+            setEditingIncome(false)
+          }}
+          onChange={onChangeIncome}
+        />
       </div>
     </div>
   )
