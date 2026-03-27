@@ -29,3 +29,14 @@ class TransactionSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Report does not belong to current user.")
         return value
 
+    def validate(self, attrs):
+        attrs = super().validate(attrs)
+        report: MonthlyReport | None = attrs.get("report") or getattr(self.instance, "report", None)
+        date = attrs.get("date") or getattr(self.instance, "date", None)
+        if report and date:
+            if date.year != report.year or date.month != report.month:
+                raise serializers.ValidationError(
+                    {"date": "Date must be within the selected report month."}
+                )
+        return attrs
+

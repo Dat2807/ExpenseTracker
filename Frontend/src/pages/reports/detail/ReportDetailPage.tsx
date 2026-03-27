@@ -68,7 +68,7 @@ export function ReportDetailPage() {
 
       <div className={styles.panel}>
         {activeTab === 'overview' ? <OverviewBudgetTab reportId={reportId} onError={setError} /> : null}
-        {activeTab === 'transactions' ? <TransactionsTab /> : null}
+        {activeTab === 'transactions' ? <TransactionsTab reportId={reportId} onError={setError} /> : null}
         {activeTab === 'detailed' ? <DetailedReportTab /> : null}
       </div>
     </div>
